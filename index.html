@@ -40,6 +40,7 @@
 
     <link type="text/css" rel="stylesheet" href="css/ide.css">
     <link type="text/css" rel="stylesheet" href="css/site.css">
+    <link type="text/css" rel="stylesheet" href="css/chat_sidebar.css">
 
     <title>Judge0 IDE</title>
     <meta name="title" content="Judge0 IDE">
@@ -146,6 +147,14 @@
     </div>
 
     <div id="judge0-site-content"></div>
+    
+    <div id="chat-sidebar"> 
+        <div class="chat-messages"></div>
+        <div class="chat-input">
+            <input type="text" placeholder="Ask a coding question..." id="chat-input-field">
+            <button id="chat-send-button">Send</button>
+        </div>
+    </div>
 
     <div id="judge0-site-modal" class="ui modal">
         <div class="header">
@@ -172,5 +181,6 @@
             navigator.serviceWorker.register("sw.js").then(() => console.log("Service Worker Registered"));
         }
     </script>
+    <script src="js/chat_sidebar.js"></script>
 </body>
 </html>
