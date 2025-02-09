@@ -182,11 +182,13 @@ function getSelectedLanguageFlavor() {
 }
 
 function run() {
+    if (!sourceEditor) {
+        console.error("Source editor is not defined yet!");
+        return;
+    }
     if (sourceEditor.getValue().trim() === "") {
         showError("Error", "Source code can't be empty!");
         return;
-    } else {
-        $runBtn.addClass("disabled");
     }
 
     stdoutEditor.setValue("");
@@ -552,6 +554,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         layout = new GoldenLayout(layoutConfig, $("#judge0-site-content"));
 
         layout.registerComponent("source", function (container, state) {
+            // Create the source editor instance and assign it to the global variable
             sourceEditor = monaco.editor.create(container.getElement()[0], {
                 automaticLayout: true,
                 scrollBeyondLastLine: true,
@@ -562,9 +565,19 @@ document.addEventListener("DOMContentLoaded", async function () {
                     enabled: true
                 }
             });
-
+        
+            // Verify the sourceEditor is defined
+            console.log("sourceEditor created:", sourceEditor);
+        
+            // Attach the event listener to update window.currentCode on changes
+            sourceEditor.onDidChangeModelContent(() => {
+                window.currentCode = sourceEditor.getValue();
+            });
+        
+            // Register additional commands if needed
             sourceEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
         });
+        
 
         layout.registerComponent("stdin", function (container, state) {
             stdinEditor = monaco.editor.create(container.getElement()[0], {
@@ -592,27 +605,51 @@ document.addEventListener("DOMContentLoaded", async function () {
             });
         });
         layout.registerComponent("chat", function (container, state) {
-            // Get the container as a jQuery object
             let $container = container.getElement();
             if (!$container || !$container.length) {
                 console.error("Container element is not available.");
                 return;
             }
         
-            // Inject your chat HTML into the container
+            // Inject the chat HTML
             $container.html(`
-                <div id="chatbox">
-                    <div class="chat-messages"></div>
-                    <div class="chat-input">
-                        <input type="text" placeholder="Ask a coding question..." id="chat-input-field">
-                        <button id="chat-send-button">Send</button>
+                <div id="chatbox" style="height: 100%; display: flex; flex-direction: column;">
+                    <div id="chat-output" style="flex: 1;"></div>
+                    <div class="chat-input" style="padding-top: 5px;">
+                        <input type="text" placeholder="Ask a coding question..." id="chat-input-field" style="width: 80%;">
+                        <button id="chat-send-button" style="width: 18%;">Send</button>
                     </div>
                 </div>
             `);
         
-            // Initialize the chat, passing in the jQuery container
-            initializeChat($container);
+            // Use a delay to ensure the HTML is rendered
+            setTimeout(() => {
+                let chatOutputEl = $container.find("#chat-output")[0] || $container[0].querySelector("#chat-output");
+                if (!chatOutputEl) {
+                    console.error("Chat output element not found.");
+                    console.log("Container HTML:", $container.html());
+                    return;
+                }
+        
+                let chatOutputEditor = monaco.editor.create(chatOutputEl, {
+                    value: "",
+                    language: "plaintext",
+                    readOnly: true,
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    fontFamily: "JetBrains Mono",
+                    fontSize: 13,
+                    theme: "vs-dark",
+                    wordWrap: "on",
+                    wrappingIndent: "indent"
+                });
+        
+                initializeChat($container, chatOutputEditor);
+            }, 50); // Adjust delay if necessary
         });
+        
+        
+        
 
         layout.on("initialised", function () {
             setDefaults();

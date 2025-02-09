@@ -1,49 +1,54 @@
-function initializeChat($container) {
-    // Use jQuery's find method to locate the chatbox inside $container
-    let $chatbox = $container.find("#chatbox");
-    if (!$chatbox.length) {
-        console.error("Chatbox element not found within the container.");
-        return;
+function initializeChat($container, chatOutputEditor) {
+    // Instead of directly using sourceEditor.getValue(),
+    // use window.currentCode which gets updated when the source changes.
+    let codeContent = (typeof sourceEditor !== "undefined" && sourceEditor.getValue())
+                      ? sourceEditor.getValue()
+                      : window.currentCode || "";
+
+    console.log("Code content from source editor:", codeContent);
+    // Use codeContent as needed...
+
+    // Set up chat sending, etc.
+    const inputField = $container.find("#chat-input-field")[0];
+    const sendButton = $container.find("#chat-send-button")[0];
+
+    let chatHistory = [];
+    function updateChatOutput() {
+        chatOutputEditor.setValue(chatHistory.join("\n"));
     }
 
-    // Get elements from within the chatbox
-    const messagesContainer = $chatbox.find(".chat-messages")[0];
-    const inputField = $chatbox.find("#chat-input-field")[0];
-    const sendButton = $chatbox.find("#chat-send-button")[0];
-
-    // Function to append messages to the chat area
-    function appendMessage(role, text) {
-        const messageElem = document.createElement("div");
-        messageElem.className = `chat-message ${role}`;
-        messageElem.textContent = text;
-        messagesContainer.appendChild(messageElem);
-        // Optionally, scroll to show the new message
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    // Async function to send messages to your backend
     async function sendMessage() {
         const text = inputField.value.trim();
         if (!text) return;
 
-        appendMessage('user', text);
+        chatHistory.push("User: " + text);
+        updateChatOutput();
         inputField.value = '';
+
+        // Optionally, update prompt with code context
+        let prompt = text;
+        if (typeof sourceEditor !== "undefined") {
+            prompt += "\n\nCode Context:\n" + sourceEditor.getValue();
+        } else if (window.currentCode) {
+            prompt += "\n\nCode Context:\n" + window.currentCode;
+        }
 
         try {
             const response = await fetch('http://localhost:3001/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: text })
+                body: JSON.stringify({ prompt: prompt })
             });
             const data = await response.json();
-            appendMessage('assistant', data.reply);
+            chatHistory.push("Assistant: " + data.reply);
+            updateChatOutput();
         } catch (error) {
             console.error('Error fetching AI response:', error);
-            appendMessage('assistant', 'Error: Could not get a response.');
+            chatHistory.push("Assistant: Error: Could not get a response.");
+            updateChatOutput();
         }
     }
 
-    // Attach event listeners to send messages when clicking the button or pressing Enter
     sendButton.addEventListener("click", sendMessage);
     inputField.addEventListener("keydown", function(e) {
         if (e.key === "Enter") {
