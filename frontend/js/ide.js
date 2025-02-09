@@ -83,6 +83,15 @@ var layoutConfig = {
                 componentState: {
                     readOnly: true
                 }
+            }, {
+                type: "component",
+                componentName: "chat",
+                id: "chat",
+                title: "Codee: the AI coding assistant",
+                isClosable: false,
+                componentState: {
+                    readOnly: false
+                }
             }]
         }]
     }]
@@ -581,6 +590,28 @@ document.addEventListener("DOMContentLoaded", async function () {
                     enabled: false
                 }
             });
+        });
+        layout.registerComponent("chat", function (container, state) {
+            // Get the container as a jQuery object
+            let $container = container.getElement();
+            if (!$container || !$container.length) {
+                console.error("Container element is not available.");
+                return;
+            }
+        
+            // Inject your chat HTML into the container
+            $container.html(`
+                <div id="chatbox">
+                    <div class="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" placeholder="Ask a coding question..." id="chat-input-field">
+                        <button id="chat-send-button">Send</button>
+                    </div>
+                </div>
+            `);
+        
+            // Initialize the chat, passing in the jQuery container
+            initializeChat($container);
         });
 
         layout.on("initialised", function () {

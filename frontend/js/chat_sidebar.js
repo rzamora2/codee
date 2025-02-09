@@ -1,20 +1,27 @@
-// js/chat-sidebar.js
-(function() {
-    const messagesContainer = document.querySelector('#chat-sidebar .chat-messages');
-    const inputField = document.getElementById('chat-input-field');
-    const sendButton = document.getElementById('chat-send-button');
-    
+function initializeChat($container) {
+    // Use jQuery's find method to locate the chatbox inside $container
+    let $chatbox = $container.find("#chatbox");
+    if (!$chatbox.length) {
+        console.error("Chatbox element not found within the container.");
+        return;
+    }
 
-    // Function to append messages to the chat
+    // Get elements from within the chatbox
+    const messagesContainer = $chatbox.find(".chat-messages")[0];
+    const inputField = $chatbox.find("#chat-input-field")[0];
+    const sendButton = $chatbox.find("#chat-send-button")[0];
+
+    // Function to append messages to the chat area
     function appendMessage(role, text) {
-        const messageElem = document.createElement('div');
+        const messageElem = document.createElement("div");
         messageElem.className = `chat-message ${role}`;
         messageElem.textContent = text;
         messagesContainer.appendChild(messageElem);
+        // Optionally, scroll to show the new message
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    // Function to send a message to the backend API
+    // Async function to send messages to your backend
     async function sendMessage() {
         const text = inputField.value.trim();
         if (!text) return;
@@ -36,11 +43,11 @@
         }
     }
 
-    // Event listeners for sending messages
-    sendButton.addEventListener('click', sendMessage);
-    inputField.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
+    // Attach event listeners to send messages when clicking the button or pressing Enter
+    sendButton.addEventListener("click", sendMessage);
+    inputField.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
             sendMessage();
         }
     });
-})();
+}
